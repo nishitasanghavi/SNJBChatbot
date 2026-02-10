@@ -1,8 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Bot, User, RotateCcw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { WELCOME_MESSAGE } from "@/lib/chatbotData";
-import { apiRequest } from "@/lib/queryClient";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Message {
@@ -12,6 +10,20 @@ interface Message {
   timestamp: Date;
   quickReplies?: string[];
 }
+
+const WELCOME_TEXT = "Hi there! Welcome to SNJB College of Engineering. I can help you with questions about our college - like courses, fees, admissions, placements, hostel, and more. Just pick a topic below or type your question!";
+const WELCOME_QUICK_REPLIES = [
+  "About SNJB",
+  "Courses Offered",
+  "Admissions",
+  "Fees Structure",
+  "Placements",
+  "Cutoffs",
+  "Hostel & Facilities",
+  "Contact Us",
+  "Lateral Entry (DSE)",
+  "Training & Support",
+];
 
 function formatMarkdown(text: string) {
   const lines = text.split("\n");
@@ -33,11 +45,11 @@ function formatMarkdown(text: string) {
 
       if (boldMatch && boldMatch.index !== undefined) {
         const candidate = { index: boldMatch.index, length: boldMatch[0].length, element: <strong key={`b-${keyIdx}`} className="font-semibold">{boldMatch[1]}</strong>, type: "bold" };
-        if (!nextMatch || candidate.index < nextMatch.index) nextMatch = candidate;
+        if (nextMatch === null || candidate.index < nextMatch.index) nextMatch = candidate;
       }
       if (linkMatch && linkMatch.index !== undefined) {
         const candidate = { index: linkMatch.index, length: linkMatch[0].length, element: <a key={`l-${keyIdx}`} href={linkMatch[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 underline">{linkMatch[1]}</a>, type: "link" };
-        if (!nextMatch || candidate.index < nextMatch.index) nextMatch = candidate;
+        if (nextMatch === null || candidate.index < nextMatch.index) nextMatch = candidate;
       }
 
       if (nextMatch) {
@@ -151,10 +163,10 @@ export default function ChatbotWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
-      content: WELCOME_MESSAGE.text,
+      content: WELCOME_TEXT,
       sender: "bot",
       timestamp: new Date(),
-      quickReplies: WELCOME_MESSAGE.quickReplies,
+      quickReplies: WELCOME_QUICK_REPLIES,
     },
   ]);
   const [input, setInput] = useState("");
@@ -163,6 +175,7 @@ export default function ChatbotWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -180,36 +193,108 @@ export default function ChatbotWidget() {
     }
   }, [isOpen]);
 
-  const sendToApi = useCallback(async (message: string) => {
-    setIsTyping(true);
-    try {
-      const res = await apiRequest("POST", "/api/chat", { message });
-      const data = await res.json();
-      setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot-${Date.now()}`,
-          content: data.text,
-          sender: "bot",
-          timestamp: new Date(),
-          quickReplies: data.quickReplies,
-        },
-      ]);
-    } catch {
-      setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `bot-${Date.now()}`,
-          content: "Sorry, something went wrong. Please try again or choose a topic below.",
-          sender: "bot",
-          timestamp: new Date(),
-          quickReplies: ["About SNJB", "Courses Offered", "Contact Us"],
-        },
-      ]);
-    }
+  const buildHistory = useCallback((msgs: Message[]) => {
+    return msgs
+      .filter((m) => m.id !== "welcome")
+      .map((m) => ({
+        role: m.sender === "user" ? "user" as const : "assistant" as const,
+        content: m.content,
+      }));
   }, []);
+
+  const sendToApi = useCallback(async (message: string, currentMessages: Message[]) => {
+    setIsTyping(true);
+
+    const botMsgId = `bot-${Date.now()}`;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: botMsgId,
+        content: "",
+        sender: "bot",
+        timestamp: new Date(),
+      },
+    ]);
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    try {
+      const history = buildHistory(currentMessages);
+
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, history }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+
+      const reader = res.body?.getReader();
+      if (!reader) throw new Error("No stream");
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullText = "";
+      let quickReplies: string[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+
+          try {
+            const data = JSON.parse(line.slice(6));
+
+            if (data.type === "text") {
+              fullText += data.content;
+              setMessages((prev) =>
+                prev.map((m) =>
+                  m.id === botMsgId ? { ...m, content: fullText } : m
+                )
+              );
+            } else if (data.type === "done") {
+              quickReplies = data.quickReplies || [];
+            }
+          } catch {
+            // skip malformed JSON
+          }
+        }
+      }
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMsgId
+            ? { ...m, content: fullText, quickReplies }
+            : m
+        )
+      );
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") return;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMsgId
+            ? {
+                ...m,
+                content: "Sorry, something went wrong. Please try again or choose a topic below.",
+                quickReplies: ["About SNJB", "Courses Offered", "Contact Us"],
+              }
+            : m
+        )
+      );
+    } finally {
+      setIsTyping(false);
+      abortControllerRef.current = null;
+    }
+  }, [buildHistory]);
 
   const handleSend = useCallback(() => {
     const trimmed = input.trim();
@@ -221,10 +306,13 @@ export default function ChatbotWidget() {
       sender: "user",
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput("");
 
-    sendToApi(trimmed);
+    setMessages((prev) => {
+      const updated = [...prev, userMsg];
+      sendToApi(trimmed, updated);
+      return updated;
+    });
+    setInput("");
   }, [input, isTyping, sendToApi]);
 
   const handleQuickReply = useCallback((reply: string) => {
@@ -236,19 +324,25 @@ export default function ChatbotWidget() {
       sender: "user",
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMsg]);
 
-    sendToApi(reply);
+    setMessages((prev) => {
+      const updated = [...prev, userMsg];
+      sendToApi(reply, updated);
+      return updated;
+    });
   }, [isTyping, sendToApi]);
 
   const handleReset = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
     setMessages([
       {
         id: "welcome",
-        content: WELCOME_MESSAGE.text,
+        content: WELCOME_TEXT,
         sender: "bot",
         timestamp: new Date(),
-        quickReplies: WELCOME_MESSAGE.quickReplies,
+        quickReplies: WELCOME_QUICK_REPLIES,
       },
     ]);
     setIsTyping(false);
@@ -359,13 +453,23 @@ export default function ChatbotWidget() {
                         data-testid={`message-${msg.sender}-${msg.id}`}
                       >
                         {msg.sender === "bot" ? (
-                          <div className="space-y-0.5">{formatMarkdown(msg.content)}</div>
+                          msg.content ? (
+                            <div className="space-y-0.5">{formatMarkdown(msg.content)}</div>
+                          ) : (
+                            <div className="flex gap-1.5 py-1" data-testid="typing-indicator">
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "0ms" }} />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "150ms" }} />
+                              <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "300ms" }} />
+                            </div>
+                          )
                         ) : (
                           <p className="text-[13px] leading-relaxed">{msg.content}</p>
                         )}
-                        <p className={`text-[9px] mt-1.5 ${msg.sender === "user" ? "text-white/40 text-right" : "text-white/30"}`}>
-                          {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </p>
+                        {msg.content && (
+                          <p className={`text-[9px] mt-1.5 ${msg.sender === "user" ? "text-white/40 text-right" : "text-white/30"}`}>
+                            {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        )}
                       </div>
                       {msg.sender === "user" && (
                         <div className="w-7 h-7 rounded-full bg-[hsl(30,85%,52%)] flex items-center justify-center flex-shrink-0 mt-1">
@@ -390,21 +494,6 @@ export default function ChatbotWidget() {
                     )}
                   </div>
                 ))}
-
-                {isTyping && (
-                  <div className="flex gap-2 justify-start">
-                    <div className="w-7 h-7 rounded-full bg-[hsl(215,80%,28%)] flex items-center justify-center flex-shrink-0">
-                      <Bot className="w-3.5 h-3.5 text-white" />
-                    </div>
-                    <div className="bg-white/8 border border-white/8 rounded-xl rounded-bl-sm px-4 py-3">
-                      <div className="flex gap-1.5" data-testid="typing-indicator">
-                        <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-2 h-2 rounded-full bg-white/40 animate-bounce" style={{ animationDelay: "300ms" }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
               <div ref={messagesEndRef} />
 
@@ -447,7 +536,7 @@ export default function ChatbotWidget() {
                   <Send className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-[9px] text-white/25 text-center mt-1.5">SNJB College of Engineering - Virtual Assistant</p>
+              <p className="text-[9px] text-white/25 text-center mt-1.5">SNJB College of Engineering - AI Assistant</p>
             </div>
           </motion.div>
         )}

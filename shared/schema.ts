@@ -8,12 +8,19 @@ export const chatMessageSchema = z.object({
   quickReplies: z.array(z.string()).optional(),
 });
 
+export const conversationMessageSchema = z.object({
+  role: z.enum(["user", "assistant"]),
+  content: z.string(),
+});
+
 export const chatRequestSchema = z.object({
   message: z.string().min(1),
+  history: z.array(conversationMessageSchema).optional().default([]),
 });
 
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
 export type ChatRequest = z.infer<typeof chatRequestSchema>;
+export type ConversationMessage = z.infer<typeof conversationMessageSchema>;
 
 export type InsertUser = { username: string; password: string };
 export type User = { id: string; username: string; password: string };

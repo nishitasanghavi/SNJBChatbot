@@ -433,7 +433,7 @@ export default function ChatbotWidget() {
                     }
                   }}
                   placeholder="Ask about admissions, fees, placements..."
-                  className="flex-1 bg-white/6 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-[hsl(215,80%,40%)] transition-colors"
+                  className="flex-1 bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-sm text-[#ffffff] placeholder:text-[rgba(255,255,255,0.3)] focus:outline-none focus:border-[hsl(215,80%,40%)] transition-colors caret-white"
                   disabled={isTyping}
                   data-testid="input-chat-message"
                 />

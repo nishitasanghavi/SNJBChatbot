@@ -1,16 +1,22 @@
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { type Server } from "http";
+import { getResponse } from "./chatbot";
+import { chatRequestSchema } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  app.post("/api/chat", (req, res) => {
+    const parsed = chatRequestSchema.safeParse(req.body);
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Message is required" });
+    }
+
+    const response = getResponse(parsed.data.message);
+    return res.json(response);
+  });
 
   return httpServer;
 }

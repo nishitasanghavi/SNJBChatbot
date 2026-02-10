@@ -3,6 +3,8 @@ interface BotResponse {
   quickReplies?: string[];
 }
 
+const CONTACT_FALLBACK = "\n\nIf you need more help, you can call the college at **+91 2556 253750** or **8888491461**.";
+
 const QUICK_CATEGORIES = [
   "About SNJB",
   "Courses Offered",
@@ -17,49 +19,259 @@ const QUICK_CATEGORIES = [
 ];
 
 const WELCOME_MESSAGE: BotResponse = {
-  text: "Welcome to SNJB College of Engineering! I'm here to help you with any questions about admissions, courses, fees, placements, and more. What would you like to know?",
+  text: "Hi there! Welcome to SNJB College of Engineering. I can help you with questions about our college - like courses, fees, admissions, placements, hostel, and more. Just pick a topic below or type your question!",
   quickReplies: QUICK_CATEGORIES,
 };
 
 const knowledgeBase: Record<string, BotResponse> = {
   about: {
-    text: `**SNJB's Late Sau. Kantabai Bhavarlalji Jain College of Engineering** is located in Chandwad, Nashik. Established in 2004, it is part of the Jain Gurukul campus.\n\n- **Affiliation:** Savitribai Phule Pune University (SPPU)\n- **Accreditation:** NAAC 'A+' Grade, NBA Accredited (Civil, Computer, E&TC, Mechanical, MBA)\n- **Institute Code:** 5173\n- **Website:** [snjb.org/engineering](https://www.snjb.org/engineering/)\n\nThe Jain Gurukul campus has various faculties. SNJB's College of Engineering is approved by AICTE, New Delhi and the Government of Maharashtra. It was established with four branches: Mechanical, Computer, E&TC, and Civil Engineering.`,
+    text: `**About SNJB College of Engineering**
+
+SNJB College of Engineering is in **Chandwad, Nashik** (Maharashtra). It started in **2004** and is part of the Jain Gurukul campus.
+
+Here are the key things to know:
+- It comes under **Savitribai Phule Pune University (SPPU)**
+- It has **NAAC 'A+' Grade** (that means very good quality)
+- Several branches have **NBA Accreditation** (Computer, Civil, E&TC, Mechanical, MBA)
+- College code is **5173** (you'll need this during admissions)
+- It is approved by **AICTE** (Government of India) and Government of Maharashtra
+
+The college started with 4 branches - Mechanical, Computer, E&TC, and Civil. Now it has grown to offer more courses including AI & Data Science and MBA.
+
+Website: [snjb.org/engineering](https://www.snjb.org/engineering/)${CONTACT_FALLBACK}`,
     quickReplies: ["Courses Offered", "Admissions", "Contact Us"],
   },
   courses: {
-    text: `We offer **Undergraduate (B.Tech)**, **Postgraduate (MBA, M.Tech)**, and **Ph.D.** programs.\n\n**B.Tech Branches:**\n- Artificial Intelligence & Data Science\n- Civil Engineering\n- Computer Engineering\n- Electronics & Telecommunication\n- Mechanical Engineering\n\n**PG Courses:**\n- MBA (General)\n- M.Tech (Computer Engineering, Mechanical Engineering)\n\n**Ph.D. Research Center:**\n- MBA, Computer Engineering, Mechanical Engineering`,
+    text: `**Courses at SNJB**
+
+We have 3 levels of courses:
+
+**After 12th (B.Tech - 4 years):**
+- Artificial Intelligence & Data Science (AI & DS)
+- Civil Engineering
+- Computer Engineering
+- Electronics & Telecommunication (E&TC)
+- Mechanical Engineering
+
+**After Graduation (PG Courses):**
+- MBA (Master of Business Administration)
+- M.Tech in Computer Engineering
+- M.Tech in Mechanical Engineering
+
+**Research (Ph.D.):**
+- Available in MBA, Computer Engineering, and Mechanical Engineering
+
+Most students join B.Tech after 12th. Computer Engineering and AI & DS are the most popular branches right now.${CONTACT_FALLBACK}`,
     quickReplies: ["Fees Structure", "Admissions", "Placements"],
   },
   admissions: {
-    text: `**First Year B.E./B.Tech Eligibility:**\n1. Passed HSC (12th) with Physics & Maths as compulsory subjects along with Chemistry/Bio/Tech/Vocational\n2. Minimum Marks: 45% (General) or 40% (Reserved/PWD of Maharashtra)\n3. Valid Score: MHT-CET or JEE Main (current year)\n\n**MBA Eligibility:**\n1. Bachelor's degree in any discipline with minimum 50% marks (45% for Reserved)\n2. Valid Score in MAH-MBA-CET, CAT, CMAT, MAT, XAT, or ATMA\n\n**Lateral Entry (Direct 2nd Year):**\n- Diploma holders with at least 45% marks (40% for Reserved) are eligible`,
+    text: `**How to Get Admission**
+
+**For B.Tech (after 12th):**
+- You need to pass 12th with Physics + Maths + one more subject (Chemistry/Bio/Tech)
+- Minimum marks: **45%** (General) or **40%** (Reserved categories like SC/ST/OBC)
+- You must have a valid **MHT-CET** or **JEE Main** score
+- Admission happens through the state CAP (online counseling) process
+
+**For MBA (after graduation):**
+- Any degree with at least **50%** marks (45% for Reserved)
+- Valid score in MAH-MBA-CET, CAT, CMAT, MAT, XAT, or ATMA
+
+**For Direct 2nd Year (after Diploma):**
+- Diploma in Engineering with at least **45%** marks (40% for Reserved)
+- This is called "Lateral Entry" or DSE
+
+**College Code: 5173** - Use this when filling your admission form.${CONTACT_FALLBACK}`,
     quickReplies: ["Fees Structure", "Cutoffs", "Lateral Entry (DSE)"],
   },
   fees: {
-    text: `**Fee Structure (2025-26, Approximate):**\n\n**B.Tech (First Year):**\n- Open/General: ~₹1,18,000/year\n- OBC/EBC: ~₹65,000 - ₹70,000/year\n- SC/ST/VJNT/SBC: ~₹10,000 - ₹20,000/year\n- TFWS: ~₹15,000 - ₹20,000/year\n- Girls (All Categories): 100% Tuition Fee waived\n\n**MBA:** ~₹86,000 - ₹88,000/year\n**M.Tech:** ~₹1,04,000/year\n**Direct Second Year:** ~₹1,07,000/year (Open)\n\n**Hostel Fees (Annual):**\n- Boys: ₹49,500 - ₹70,000 (Regular vs Deluxe)\n- Girls: ₹49,500 - ₹62,000\n\n*Fees subject to approval by Fees Regulating Authority (FRA)*`,
+    text: `**Fees (2025-26, Approximate)**
+
+**B.Tech (per year):**
+- General/Open category: around **₹1,18,000**
+- OBC/EBC: around **₹65,000 - ₹70,000**
+- SC/ST/VJNT/SBC: around **₹10,000 - ₹20,000** (most fees covered by government)
+- TFWS (Free seat): around **₹15,000 - ₹20,000** only
+- **Girls get 100% tuition fee waiver** in all categories (big saving!)
+
+**MBA:** around ₹86,000 - ₹88,000 per year
+**M.Tech:** around ₹1,04,000 per year
+**Direct 2nd Year (Lateral Entry):** around ₹1,07,000 per year (Open)
+
+**Hostel Fees (per year, food included):**
+- Boys: ₹49,500 - ₹70,000 (depends on room type)
+- Girls: ₹49,500 - ₹62,000
+
+These fees can change - the Fees Regulating Authority (FRA) decides the final amount each year.${CONTACT_FALLBACK}`,
     quickReplies: ["Hostel & Facilities", "Admissions", "Contact Us"],
   },
   placements: {
-    text: `**Placement Highlights:**\n- Overall Placement Rate: ~70-75%\n- Highest Package: **₹15.74 LPA**\n- Average Package: **₹3.5 - ₹4.5 LPA**\n- Median Salary: ~₹3.5 LPA\n\n**Branch-wise Performance:**\n| Branch | Status | Highest Package |\n|---|---|---|\n| Computer Engineering | Excellent (113+ placed) | ₹15.74 LPA |\n| AI & Data Science | Growing demand | ₹8.2 LPA |\n| E&TC | Consistent | ₹4.2 - ₹6.5 LPA |\n| Mechanical | Consistent | ~₹4.5 LPA |\n| Civil | Consistent | ₹3.6 LPA |\n\n**Top Recruiters:** TCS, Capgemini, Cognizant, Zensar, Hexaware, LTIMindtree, Wipro, Infosys, L&T, Bosch, Mahindra, Jio, D-Mart, ICICI Bank, Bajaj Finance`,
+    text: `**Placements at SNJB**
+
+Here's a simple summary of our placement record:
+- About **70-75%** of students get placed
+- **Highest package:** ₹15.74 LPA (Lakhs per year)
+- **Average package:** ₹3.5 - ₹4.5 LPA
+- **Most common salary:** around ₹3.5 LPA
+
+**Which branches do well?**
+| Branch | Highest Package |
+|---|---|
+| Computer Engineering | ₹15.74 LPA (best!) |
+| AI & Data Science | ₹8.2 LPA |
+| E&TC | ₹4.2 - ₹6.5 LPA |
+| Mechanical | ₹4.5 LPA |
+| Civil | ₹3.6 LPA |
+
+**Companies that come to hire:** TCS, Capgemini, Cognizant, Wipro, Infosys, LTIMindtree, Zensar, Hexaware, L&T, Bosch, Mahindra, Jio, D-Mart, ICICI Bank, Bajaj Finance, and more.
+
+Computer Engineering students usually get the best packages and the most job offers.${CONTACT_FALLBACK}`,
     quickReplies: ["Training & Support", "Courses Offered", "Cutoffs"],
   },
   cutoffs: {
-    text: `**MHT-CET Cutoffs (Open/General, Approximate Percentiles):**\n\n| Branch | Open (GOPEN) | OBC | TFWS |\n|---|---|---|---|\n| Computer Engineering | 79-88 %tile | 76-80 %tile | 88-92 %tile |\n| AI & Data Science | 78-85 %tile | 75-79 %tile | 85-90 %tile |\n| E&TC Engineering | 73-76 %tile | 45-60 %tile | 75-80 %tile |\n| Mechanical | 55-68 %tile | 10-40 %tile | ~70 %tile |\n| Civil | 50-60 %tile | 10-30 %tile | ~76 %tile |\n\n**JEE Main Ranks (All India Quota):**\n- Computer: ~3,30,000 - 3,90,000\n- AI & DS: ~3,40,000 - 4,20,000\n- E&TC: ~4,50,000 - 4,80,000\n\n**Jain Minority Quota:** Requires a non-zero positive score in MHT-CET for most branches.\n\n*Cutoffs vary annually based on applicants and difficulty.*`,
+    text: `**Cutoffs (How much score you need to get in)**
+
+**MHT-CET Cutoffs (Approximate Percentiles):**
+
+| Branch | Open/General | OBC | TFWS |
+|---|---|---|---|
+| Computer Engineering | 79-88 | 76-80 | 88-92 |
+| AI & Data Science | 78-85 | 75-79 | 85-90 |
+| E&TC | 73-76 | 45-60 | 75-80 |
+| Mechanical | 55-68 | 10-40 | ~70 |
+| Civil | 50-60 | 10-30 | ~76 |
+
+Higher percentile = harder to get in. Computer and AI branches need the highest scores.
+
+**JEE Main Ranks (All India Quota):**
+- Computer: around 3,30,000 - 3,90,000 rank
+- AI & DS: around 3,40,000 - 4,20,000 rank
+- E&TC: around 4,50,000 - 4,80,000 rank
+
+**Jain Minority Quota:** You just need a positive (non-zero) MHT-CET score for most branches.
+
+These cutoffs change every year depending on number of students and exam difficulty.${CONTACT_FALLBACK}`,
     quickReplies: ["Admissions", "Fees Structure", "Contact Us"],
   },
   hostel: {
-    text: `**Hostel Facilities at SNJB:**\n\n- **Boys Hostels:** 4 buildings (~810 capacity)\n- **Girls Hostels:** 2 buildings (~750 capacity)\n\n**Room Types & Fees (Annual, including mess):**\n- Boys Regular: ₹55,500 | Deluxe: ₹78,000\n- Girls Regular: ₹60,000 | Deluxe: ₹72,000\n- Sharing: 2, 4, or 5 students per room\n\n**Amenities:**\n- Bed, table, chair, wardrobe, Wi-Fi\n- RO purified water, solar water heaters\n- Indoor Gym, outdoor "Green Gym"\n- Sports: Table Tennis, Cricket, Volleyball, Basketball\n- Library/Reading Room, Guest Room, Amphitheatre\n- Medical OPD with visiting doctor\n\n**Food:** Pure Vegetarian Jain food (included in fees)\n**Curfew:** 8:00 PM | Biometric attendance daily\n**Policy:** Non-veg, alcohol & tobacco strictly prohibited`,
+    text: `**Hostel & Campus Facilities**
+
+**Hostel:**
+- **Boys:** 4 hostel buildings (can fit ~810 students)
+- **Girls:** 2 hostel buildings (can fit ~750 students)
+- Rooms are shared by 2, 4, or 5 students
+- Boys Regular room: ₹55,500/year | Deluxe: ₹78,000/year
+- Girls Regular room: ₹60,000/year | Deluxe: ₹72,000/year
+- **Food is included** in hostel fees (pure vegetarian Jain food)
+
+**What you get in hostel:**
+- Bed, table, chair, wardrobe
+- Wi-Fi internet
+- Clean drinking water (RO purified)
+- Hot water (solar heaters)
+
+**Other facilities on campus:**
+- Indoor Gym and outdoor exercise area
+- Sports: Cricket, Volleyball, Basketball, Table Tennis
+- Library and reading room
+- Medical checkup facility with visiting doctor
+
+**Rules:** Hostel gate closes at 8 PM. Non-veg food, alcohol, and tobacco are not allowed on campus.${CONTACT_FALLBACK}`,
     quickReplies: ["Fees Structure", "About SNJB", "Contact Us"],
   },
   contact: {
-    text: `**Contact Information:**\n\n**Address:** Neminagar, Chandwad - 423101, Dist. Nashik, Maharashtra\n\n**Phone:** +91 2556 253750, 8888491461, 8888491463\n**Email:** principalcoe@snjb.org\n\n**Admission Enquiry:**\n- Mr. Ingle U. P. (Admission Office): +91 88884 91461\n- Mr. Jadhav M. M. (Student Section): +91 88884 91463\n\n**Department Coordinators (First Year):**\n- Computer: Prof. Pankaj Desai - 97304 78001\n- AI & DS: Prof. M. V. Kumbharde - 90490 56922\n- Civil: Prof. Pradip Yeole - 92727 22476\n- E&TC: Prof. Y. S. Rathod - 97667 63988\n- Mechanical: Prof. Kiran B. Gore - 73504 58639\n\n**MBA:** Prof. Manoj Barkale - +91 98908 57863`,
+    text: `**How to Contact SNJB**
+
+**Address:**
+SNJB's College of Engineering,
+Neminagar, Chandwad - 423101,
+Dist. Nashik, Maharashtra
+
+**Main Phone Numbers:**
+- **+91 2556 253750** (College office)
+- **8888491461** (Admission enquiry)
+- **8888491463** (Student section)
+
+**Email:** principalcoe@snjb.org
+
+**For Admission Help:**
+- Mr. Ingle U. P. (Admission Office): **+91 88884 91461**
+- Mr. Jadhav M. M. (Student Section): **+91 88884 91463**
+
+**Branch-wise Contacts (First Year):**
+- Computer: Prof. Pankaj Desai - 97304 78001
+- AI & DS: Prof. M. V. Kumbharde - 90490 56922
+- Civil: Prof. Pradip Yeole - 92727 22476
+- E&TC: Prof. Y. S. Rathod - 97667 63988
+- Mechanical: Prof. Kiran B. Gore - 73504 58639
+
+**MBA:** Prof. Manoj Barkale - +91 98908 57863
+
+Feel free to call during office hours (10 AM to 5 PM, Monday to Saturday).`,
     quickReplies: ["About SNJB", "Admissions", "Fees Structure"],
   },
   dse: {
-    text: `**Direct Second Year (Lateral Entry) Admission:**\n\n**Eligibility:**\n- Diploma in Engineering/Technology with min 45% (40% for Reserved/EWS/PWD)\n- OR B.Sc. with 45% + HSC with Maths\n\n**Admission Process (CAP - State CET Cell):**\n1. Register online at mahacet.org under 'Direct Second Year Engineering'\n2. Upload & verify documents (E-Scrutiny/Physical)\n3. Check Provisional and Final Merit List\n4. Fill Option Form - **Institute Code: 5173**\n5. Accept allotted seat (Freeze/Betterment) and report to college\n\n**Fees (Open):** ~₹1,07,000/year\n**OBC/EBC:** ~₹60,000 - ₹65,000 | **SC/ST:** ~₹10,000 - ₹15,000\n\n**DSE Cutoffs (Diploma %):**\n| Branch | Open | Minority/Reserved |\n|---|---|---|\n| Computer | 82-88% | 60-75% |\n| AI & DS | 80-85% | 60-70% |\n| E&TC | 70-78% | 55-65% |\n| Mechanical | 60-70% | 50-60% |\n| Civil | 55-65% | 50-60% |\n\n**DSE Contacts:**\n- Comp/AI-DS: Prof. R. R. Bhandari - 94042 14914\n- Civil: Prof. Pradip Yeole - 92727 22476\n- E&TC: Prof. M. A. Mechkul - 94223 13640\n- Mechanical: Prof. Y. S. Kulkarni - 96652 75743`,
+    text: `**Direct Second Year (Lateral Entry / DSE)**
+
+This is for students who have completed a **Diploma** and want to join engineering directly in **2nd year** (skip 1st year).
+
+**Who can apply?**
+- Diploma holders with at least **45%** marks (40% for Reserved/EWS)
+- OR B.Sc. graduates with 45% + 12th with Maths
+
+**How to apply (step by step):**
+1. Go to **mahacet.org** and register for "Direct Second Year Engineering"
+2. Upload your documents and get them verified
+3. Wait for the Merit List
+4. Fill the Option Form - use **College Code: 5173** for SNJB
+5. If you get a seat, accept it and come to college with your documents
+
+**Fees (per year):**
+- Open/General: around ₹1,07,000
+- OBC/EBC: around ₹60,000 - ₹65,000
+- SC/ST: around ₹10,000 - ₹15,000
+
+**Diploma % needed to get in (approximate):**
+| Branch | Open | Reserved |
+|---|---|---|
+| Computer | 82-88% | 60-75% |
+| AI & DS | 80-85% | 60-70% |
+| E&TC | 70-78% | 55-65% |
+| Mechanical | 60-70% | 50-60% |
+| Civil | 55-65% | 50-60% |
+
+**DSE Contacts:**
+- Comp/AI-DS: Prof. R. R. Bhandari - 94042 14914
+- Civil: Prof. Pradip Yeole - 92727 22476
+- E&TC: Prof. M. A. Mechkul - 94223 13640
+- Mechanical: Prof. Y. S. Kulkarni - 96652 75743${CONTACT_FALLBACK}`,
     quickReplies: ["Admissions", "Fees Structure", "Contact Us"],
   },
   training: {
-    text: `**Training & Placement Support:**\n\nThe T&P Cell begins preparation from the **3rd Year**:\n\n**Pre-Placement Training:**\n- Aptitude Training: Rigorous sessions for screening tests\n- Soft Skills: Communication, personality development, professional etiquette\n- Technical Training: Coding (C, C++, Java, Python) & domain skills\n\n**Mock Drills & Practice:**\n- Mock Personal Interviews with industry experts\n- Group Discussion (GD) practice sessions\n- Online & offline aptitude tests\n\n**Internship Support:**\n- Summer/Winter internship assistance (often convert to PPOs)\n- Regular industrial visits for practical exposure\n\n**Industry-Institute Interaction:**\n- Expert talks & seminars on latest technologies\n- MoUs with companies bridging academic-industry gap\n\n**Career Counseling:**\n- One-on-one guidance by faculty & T&P officers\n- Help choosing: Job vs. Higher Studies vs. Entrepreneurship`,
+    text: `**Training & Placement Support**
+
+The college has a special **Training & Placement (T&P) Cell** that helps students prepare for jobs. Training starts from **3rd year**.
+
+**What training do you get?**
+- **Aptitude practice:** Maths, reasoning, and logical tests (companies use these to shortlist)
+- **Communication skills:** How to speak confidently, email writing, professional behavior
+- **Technical training:** Coding in C, C++, Java, Python and other skills companies look for
+
+**Practice for interviews:**
+- Mock interviews with people from companies
+- Group Discussion (GD) practice
+- Online and offline test practice
+
+**Internship help:**
+- The college helps you find summer and winter internships
+- Many internships turn into job offers (called PPOs)
+- Regular visits to companies so you can see real workplaces
+
+**Career guidance:**
+- One-on-one advice from teachers and placement officers
+- Help deciding between job, higher studies, or starting your own business
+
+The T&P Cell works hard to make sure students are job-ready by the time companies visit campus.${CONTACT_FALLBACK}`,
     quickReplies: ["Placements", "Courses Offered", "Contact Us"],
   },
 };
@@ -106,14 +318,14 @@ export function getResponse(userMessage: string): BotResponse {
 
   if (/^(thanks?|thank\s*you|thx|ty|appreciate)/i.test(lower)) {
     return {
-      text: "You're welcome! Feel free to ask if you have any more questions. I'm happy to help!",
+      text: "You're welcome! Feel free to ask if you have more questions. I'm happy to help!",
       quickReplies: QUICK_CATEGORIES,
     };
   }
 
   if (/^(bye|goodbye|see\s*you|take\s*care)/i.test(lower)) {
     return {
-      text: "Goodbye! Thank you for visiting SNJB College of Engineering. Feel free to reach out anytime. All the best!",
+      text: "Goodbye! Thanks for chatting with us. If you need anything later, just come back here. All the best!",
       quickReplies: ["About SNJB", "Contact Us"],
     };
   }
@@ -139,7 +351,7 @@ export function getResponse(userMessage: string): BotResponse {
   }
 
   return {
-    text: "I'm sorry, I couldn't understand your question. Could you please rephrase it, or choose one of the topics below? You can ask me about admissions, courses, fees, placements, hostel facilities, cutoffs, and more!",
+    text: "Sorry, I don't have information about that right now. You can pick one of the topics below, or contact the college directly for help.\n\n**Call:** +91 2556 253750 or 8888491461\n**Email:** principalcoe@snjb.org\n\nOur team will be happy to answer your question!",
     quickReplies: QUICK_CATEGORIES,
   };
 }

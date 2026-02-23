@@ -172,6 +172,8 @@ export default function ChatbotWidget() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showScrollDown, setShowScrollDown] = useState(false);
+  const [isWakingUp, setIsWakingUp] = useState(false);
+  const [hasTriedFirstRequest, setHasTriedFirstRequest] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -219,15 +221,43 @@ export default function ChatbotWidget() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
+    // Show "Waking up server..." for first request if it's slow
+    let wakingUpTimeout: ReturnType<typeof setTimeout> | null = null;
+    if (!hasTriedFirstRequest) {
+      setHasTriedFirstRequest(true);
+      wakingUpTimeout = setTimeout(() => {
+        if (!isTyping) return; // Already finished
+        setIsWakingUp(true);
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `waking-up-${Date.now()}`,
+            content: "Waking up server... This may take a moment on first load.",
+            sender: "bot",
+            timestamp: new Date(),
+          },
+        ]);
+      }, 2000); // Show message if request takes more than 2 seconds
+    }
+
     try {
       const history = buildHistory(currentMessages);
+      const apiUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api/chat` : "/api/chat";
 
-      const res = await fetch("/api/chat", {
+      const res = await fetch(apiUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history }),
         signal: controller.signal,
       });
+
+      // Clear the waking up timeout since we got a response
+      if (wakingUpTimeout) clearTimeout(wakingUpTimeout);
+      if (isWakingUp) {
+        setIsWakingUp(false);
+        // Remove the waking up message
+        setMessages((prev) => prev.filter((m) => !m.id.startsWith("waking-up-")));
+      }
 
       if (!res.ok) throw new Error("Request failed");
 
@@ -277,6 +307,14 @@ export default function ChatbotWidget() {
         )
       );
     } catch (error: unknown) {
+      // Clear the waking up timeout
+      if (wakingUpTimeout) clearTimeout(wakingUpTimeout);
+      if (isWakingUp) {
+        setIsWakingUp(false);
+        // Remove the waking up message
+        setMessages((prev) => prev.filter((m) => !m.id.startsWith("waking-up-")));
+      }
+
       if (error instanceof Error && error.name === "AbortError") return;
 
       setMessages((prev) =>

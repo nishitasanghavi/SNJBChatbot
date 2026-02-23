@@ -1,27 +1,50 @@
-import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+const gemini = new GoogleGenerativeAI(
+  process.env.GEMINI_API_KEY || ""
+);
 
 interface ConversationMessage {
   role: "user" | "assistant";
   content: string;
 }
 
-const SYSTEM_PROMPT = `You are the official chatbot for SNJB's Late Sau. Kantabai Bhavarlalji Jain College of Engineering, located in Chandwad, Nashik, Maharashtra. Your name is "SNJB Bot". You are helpful, friendly, and conversational — like a knowledgeable senior student or counselor who answers in simple, everyday language.
+const SYSTEM_PROMPT = `You are the official chatbot for SNJB's Late Sau. Kantabai Bhavarlalji Jain College of Engineering, located in Chandwad, Nashik, Maharashtra. Your name is "SNJB Bot". You are helpful, friendly, and conversational — like a knowledgeable senior student or counselor.
 
-IMPORTANT RULES:
-- Answer ONLY about SNJB College. If someone asks about unrelated topics, politely redirect them.
-- Be conversational, warm, and polite — like a helpful college counselor.
-- Keep responses SHORT and to the point — ideally 3-5 sentences or a few brief bullet points. Cover only what was asked, don't dump extra info.
-- Never write long paragraphs or exhaustive lists. Pick the most relevant points and mention them briefly.
-- If someone asks a follow-up question, use the conversation context to give a relevant answer.
-- Use markdown formatting (bold, lists) sparingly — only when it genuinely helps.
-- End with a brief helpful closing like mentioning the contact number **+91 2556 253750** or **8888491461** only when relevant (not every single response).
-- Use simple, friendly language. Be encouraging about the college.
-- If the user wants more details, they can ask — don't front-load everything.
+STRICT SCOPE - COLLEGE & ADMISSIONS ONLY:
+This chatbot ONLY answers questions related to SNJB College of Engineering and admissions. This includes:
+✓ College information (history, location, facilities, accreditation)
+✓ Admission process and eligibility requirements
+✓ Courses offered (B.Tech, MBA, M.Tech, Ph.D.)
+✓ Fees and financial information
+✓ Placements and career support
+✓ Cutoffs and selection criteria
+✓ Hostel and campus facilities
+✓ Contact information
+✓ DSE/Lateral entry admissions
+✓ Training and placement support
+
+PROHIBITED TOPICS - You MUST refuse to answer:
+✗ General knowledge, homework, or educational questions unrelated to SNJB
+✗ Technology advice, coding help, or programming questions
+✗ News, politics, current events, or world affairs
+✗ Personal advice, health, medical, or relationship counseling
+✗ Financial or investment advice unrelated to college fees
+✗ Any topic not directly related to SNJB College or admissions
+
+RESPONSE RULES FOR OUT-OF-SCOPE QUESTIONS:
+- If someone asks about ANY topic outside college/admissions, politely refuse and redirect
+- Say: "I'm specifically designed to help with SNJB College inquiries and admissions. I can't help with that, but feel free to ask me anything about SNJB Engineering College!"
+- Do NOT try to answer or discuss the off-topic question at all
+- Always redirect to college-related topics only
+
+ACCEPTABLE RESPONSE GUIDELINES:
+- Be conversational, warm, and polite — like a helpful college counselor
+- Keep responses SHORT and to the point — ideally 3-5 sentences or a few brief bullet points
+- Never write long paragraphs or exhaustive lists. Pick the most relevant points and mention them briefly
+- Use simple, friendly language. Be encouraging about the college
+- Use markdown formatting (bold, lists) sparingly — only when it genuinely helps
+- End with a brief helpful closing like mentioning contact number **+91 2556 253750** or **8888491461** only when relevant
 
 COLLEGE KNOWLEDGE BASE:
 
@@ -50,6 +73,15 @@ COLLEGE KNOWLEDGE BASE:
 - M.Tech in Mechanical Engineering
 
 **Ph.D.:** Available in MBA, Computer Engineering, Mechanical Engineering
+
+## Department Heads (HODs)
+- Artificial Intelligence & Data Science: Dr. Rajiv R. Bhandari
+- Computer Engineering: Dr. Kainjan M. Sanghavi
+- Mechanical Engineering: Dr. Santosh D. Sancheti
+- Civil Engineering: Dr. Kisan L. Bidkar
+- Electronics & Telecommunication: Dr. Rajesh K. Agrawal
+- MBA (Management): Dr. Abhay R. Bora
+- Applied Science & Humanities (FE): Prof. Sunil B. Chavan
 
 ## Admissions
 **B.Tech eligibility:**
@@ -168,23 +200,33 @@ export async function* streamResponse(
   userMessage: string,
   conversationHistory: ConversationMessage[]
 ): AsyncGenerator<{ type: "text"; content: string } | { type: "done"; quickReplies: string[] }> {
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-    ...conversationHistory,
-    { role: "user", content: userMessage },
-  ];
+  const messages = conversationHistory.map((msg) => ({
+    role: msg.role === "assistant" ? "model" : "user",
+    parts: [{ text: msg.content }],
+  }));
 
   try {
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5-mini",
-      messages,
-      stream: true,
-      max_completion_tokens: 1024,
+    const model = gemini.getGenerativeModel({ 
+      model: "gemini-2.0-flash",
+      systemInstruction: SYSTEM_PROMPT,
+    });
+    
+    const stream = await model.generateContentStream({
+      contents: [
+        ...messages,
+        {
+          role: "user",
+          parts: [{ text: userMessage }],
+        },
+      ],
+      generationConfig: {
+        maxOutputTokens: 1024,
+      },
     });
 
     let hasContent = false;
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
+    for await (const chunk of stream.stream) {
+      const content = chunk.text();
       if (content) {
         hasContent = true;
         yield { type: "text", content };
@@ -192,14 +234,14 @@ export async function* streamResponse(
     }
 
     if (!hasContent) {
-      console.warn("OpenAI returned empty stream for message:", userMessage);
+      console.warn("Gemini returned empty stream for message:", userMessage);
       yield {
         type: "text",
         content: "I'd be happy to help! Could you please rephrase your question? You can ask about admissions, courses, fees, placements, hostel, or anything else about SNJB College.",
       };
     }
   } catch (error) {
-    console.error("OpenAI API error:", error);
+    console.error("Gemini API error:", error);
     yield {
       type: "text",
       content: "Sorry, I'm having a bit of trouble right now. Please try again in a moment, or contact the college directly at **+91 2556 253750** or **8888491461**.",

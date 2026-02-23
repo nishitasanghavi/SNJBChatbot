@@ -1,12 +1,12 @@
 # SNJB College Chatbot
 
 ## Overview
-A chatbot widget overlay for SNJB's Late Sau. Kantabai Bhavarlalji Jain College of Engineering website. The chatbot uses AI (OpenAI via Replit AI Integrations) to provide personalized, context-aware responses about the college - including admissions, courses, fees, placements, cutoffs, hostel facilities, contact information, lateral entry (DSE), and training & placement support.
+A chatbot widget overlay for SNJB's Late Sau. Kantabai Bhavarlalji Jain College of Engineering website. The chatbot uses AI (Gemini via Google Generative AI) to provide personalized, context-aware responses about the college - including admissions, courses, fees, placements, cutoffs, hostel facilities, contact information, lateral entry (DSE), and training & placement support.
 
 ## Architecture
 - **Frontend**: React + Vite with Tailwind CSS, Framer Motion for animations
-- **Backend**: Express.js with OpenAI-powered AI chatbot (streaming SSE responses)
-- **AI Model**: gpt-5-mini via Replit AI Integrations (no separate API key needed)
+- **Backend**: Express.js with Gemini-powered AI chatbot (streaming SSE responses)
+- **AI Model**: gemini-2.0-flash via Google Generative AI (requires GEMINI_API_KEY)
 - **No database needed** - conversation history maintained client-side per session
 
 ## Key Files
